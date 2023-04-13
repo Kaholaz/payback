@@ -24,6 +24,9 @@ class Transfer:
     payee: Agent
     amount: int
 
+    def __str__(self) -> str:
+        return f"{self.payer.name} -> {self.payee.name}: {self.amount}"
+
 
 @dataclass
 class Settlement:
