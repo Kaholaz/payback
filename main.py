@@ -43,6 +43,21 @@ class Settlement:
             self.agent_dict[agent_name] = agent
         return agent
 
+    def binary_insert_agent(self, agent: Agent):
+        i, j = 0, len(self.unresolved) - 1
+
+        while i <= j:
+            m = (i + j) // 2
+            diff = agent.total - self.unresolved[m].total
+            if diff == 0:
+                self.unresolved.insert(m, agent)
+                return
+            elif diff < 0:
+                j = m - 1
+            else:
+                i = m + 1
+        self.unresolved.insert(i, agent)
+
 
 def generate_settlement(expenses: list[Expense]) -> Settlement:
     settlement = Settlement()
@@ -65,34 +80,19 @@ def generate_settlement(expenses: list[Expense]) -> Settlement:
 
         # Calculate transfer
         amount = min(-payee.total, payer.total)
-        transfer = Transfer(payer, payee, amount)
-        settlement.transfers.append(transfer)
+        if amount > 0:
+            transfer = Transfer(payer, payee, amount)
+            settlement.transfers.append(transfer)
 
         payee.total += amount
         payer.total -= amount
 
-        # Remove or move payer
-        if payer.total == 0:
-            settlement.unresolved.pop()
-        else:
-            i = -1
-            while payer.total < settlement.unresolved[i - 1].total:
-                settlement.unresolved[i], settlement.unresolved[i - 1] = (
-                    settlement.unresolved[i - 1],
-                    settlement.unresolved[i],
-                )
-                i -= 1
+        settlement.unresolved.pop(0)
+        if payee.total != 0: settlement.binary_insert_agent(payee)
 
-        if payee.total == 0:
-            settlement.unresolved.pop(0)
-        elif len(settlement.unresolved):
-            i = 0
-            while settlement.unresolved[i + 1].total < payee.total:
-                settlement.unresolved[i + 1], settlement.unresolved[1] = (
-                    settlement.unresolved[i],
-                    settlement.unresolved[i + 1],
-                )
-                i += 1
+        settlement.unresolved.pop()
+        if payer.total != 0: settlement.binary_insert_agent(payer) 
+
 
     return settlement
 
