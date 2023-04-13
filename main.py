@@ -4,13 +4,8 @@ from dataclasses import field, dataclass
 @dataclass
 class Agent:
     name: str
-    received: int = 0
-    payed: int = 0
-
     # Positive total means you owe money, negative means you are owed money.
-    @property
-    def total(self) -> int:
-        return self.received - self.payed
+    total: int = 0
 
 
 @dataclass
@@ -50,13 +45,12 @@ def generate_settlement(expenses: list[Expense]) -> Settlement:
     settlement = Settlement()
 
     # Construct agent nodes
-    agents_dict = dict[str, Agent]
     for expense in expenses:
         for agent_names, amount in expense.liabilities.items():
             agent = settlement.insert_or_get_agent(agent_names)
-            agent.received += amount
+            agent.total += amount
         agent = settlement.insert_or_get_agent(expense.payee)
-        agent.payed += expense.total
+        agent.total -= expense.total
 
     settlement.unresolved: list[Agent] = sorted(
         filter(lambda a: a.total != 0, settlement.agent_dict.values()),
@@ -72,8 +66,8 @@ def generate_settlement(expenses: list[Expense]) -> Settlement:
         transfer = Transfer(payer, payee, amount)
         settlement.transfers.append(transfer)
 
-        payee.received += amount
-        payer.payed += amount
+        payee.total += amount
+        payer.total -= amount
 
         # Remove or move payer
         if payer.total == 0:
