@@ -60,7 +60,6 @@ def generate_settlement(expenses: list[Expense]) -> Settlement:
         key=lambda a: a.total,
     )
     while len(settlement.unresolved):
-        assert len(settlement.unresolved) != 1  # Can i assume this to be true?
         payee = settlement.unresolved[0]
         payer = settlement.unresolved[-1]
 
